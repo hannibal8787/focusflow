@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="MCCQE1 Quiz">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1a3a5c">
+<title>MCCQE1 Paeds Quiz</title>
+
+<script>
+const manifestData = {
+  name: "MCCQE1 Paeds Quiz",
+  short_name: "MedQuiz",
+  description: "MCCQE1 paediatrics exam prep — AI-generated questions from your notes",
+  start_url: "./mccqe1_quiz.html",
+  display: "standalone",
+  background_color: "#f0f4f8",
+  theme_color: "#1a3a5c",
+  orientation: "portrait",
+  icons: [
+    { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%231a3a5c'/%3E%3Ctext x='96' y='130' font-size='100' text-anchor='middle' fill='white'%3E%F0%9F%A7%A0%3C/text%3E%3C/svg%3E", sizes: "192x192", type: "image/svg+xml" },
+    { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='100' fill='%231a3a5c'/%3E%3Ctext x='256' y='340' font-size='260' text-anchor='middle' fill='white'%3E%F0%9F%A7%A0%3C/text%3E%3C/svg%3E", sizes: "512x512", type: "image/svg+xml" }
+  ]
+};
+const blob = new Blob([JSON.stringify(manifestData)], {type: 'application/json'});
+const manifestURL = URL.createObjectURL(blob);
+const link = document.createElement('link');
+link.rel = 'manifest';
+link.href = manifestURL;
+document.head.appendChild(link);
+</script>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#f0f4f8;--card:#ffffff;--text:#0f1f30;--muted:#6b8099;
+  --accent:#1a3a5c;--accent2:#2563eb;--success:#16a34a;--danger:#dc2626;
+  --warning:#d97706;--border:#dde5ef;--radius:14px;
+}
+html,body{height:100%;overflow:hidden;}
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  background:var(--bg);color:var(--text);
+  max-width:430px;margin:0 auto;
+  display:flex;flex-direction:column;
+  height:100vh;height:100dvh;
+}
+.app{display:flex;flex-direction:column;height:100%;}
+
+/* Header */
+.header{
+  background:var(--accent);color:#fff;
+  padding:calc(env(safe-area-inset-top,0px) + 14px) 20px 14px;
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+}
+.header h1{font-size:17px;font-weight:700;letter-spacing:-0.3px;}
+.header .sub{font-size:12px;opacity:0.7;margin-top:1px;}
+.header-right{display:flex;gap:10px;align-items:center;}
+.streak{background:rgba(255,255,255,0.15);padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;}
+
+/* Screens */
+.screen{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;display:none;padding:16px;}
+.screen.active{display:block;}
+
+/* Nav */
+.nav{
+  display:flex;background:var(--card);border-top:1px solid var(--border);
+  flex-shrink:0;padding-bottom:env(safe-area-inset-bottom,0px);
+}
+.nav-btn{
+  flex:1;padding:10px 4px 8px;border:none;background:none;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  font-size:10px;color:var(--muted);font-family:inherit;
+  -webkit-tap-highlight-color:transparent;min-height:54px;
+}
+.nav-btn i{font-size:21px;}
+.nav-btn.active{color:var(--accent2);}
+
+/* Cards */
+.card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:16px;margin-bottom:12px;
+}
+.card-title{font-size:12px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+
+/* Dashboard */
+.day-banner{
+  background:var(--accent);color:#fff;border-radius:var(--radius);
+  padding:18px;margin-bottom:14px;
+}
+.day-banner .day-label{font-size:12px;opacity:0.7;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;}
+.day-banner .day-title{font-size:18px;font-weight:700;margin-bottom:4px;}
+.day-banner .day-pages{font-size:13px;opacity:0.8;}
+.day-banner .day-topics{font-size:12px;opacity:0.65;margin-top:6px;line-height:1.5;}
+
+.progress-bar-wrap{background:var(--border);border-radius:20px;height:8px;margin:10px 0 4px;}
+.progress-bar{height:8px;border-radius:20px;background:var(--accent2);transition:width 0.4s;}
+.progress-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);}
+
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;}
+.stat-num{font-size:28px;font-weight:700;line-height:1;}
+.stat-label{font-size:12px;color:var(--muted);margin-top:3px;}
+.stat-card.green .stat-num{color:var(--success);}
+.stat-card.blue .stat-num{color:var(--accent2);}
+.stat-card.amber .stat-num{color:var(--warning);}
+.stat-card.red .stat-num{color:var(--danger);}
+
+.topic-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);}
+.topic-row:last-child{border-bottom:none;}
+.topic-name{font-size:14px;font-weight:500;}
+.topic-score{font-size:13px;font-weight:600;}
+.topic-bar{flex:1;height:4px;background:var(--border);border-radius:4px;margin:0 10px;}
+.topic-fill{height:4px;border-radius:4px;background:var(--accent2);}
+
+/* Buttons */
+.btn-primary{
+  width:100%;padding:15px;background:var(--accent2);color:#fff;
+  border:none;border-radius:var(--radius);font-size:16px;font-weight:700;
+  cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.btn-secondary{
+  width:100%;padding:13px;background:none;border:1.5px solid var(--border);
+  color:var(--text);border-radius:var(--radius);font-size:14px;font-weight:600;
+  cursor:pointer;font-family:inherit;margin-top:10px;
+}
+.btn-danger{
+  width:100%;padding:13px;background:none;border:1.5px solid #fecaca;
+  color:var(--danger);border-radius:var(--radius);font-size:14px;font-weight:600;
+  cursor:pointer;font-family:inherit;margin-top:8px;
+}
+
+/* Quiz Screen */
+.quiz-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:16px;
+}
+.q-counter{font-size:13px;color:var(--muted);font-weight:600;}
+.q-topic{font-size:12px;background:#e0e7ff;color:#3730a3;padding:3px 10px;border-radius:20px;font-weight:600;}
+
+.question-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:20px;margin-bottom:14px;
+}
+.question-text{font-size:16px;font-weight:500;line-height:1.55;color:var(--text);}
+
+.options-list{display:flex;flex-direction:column;gap:10px;}
+.option-btn{
+  width:100%;padding:14px 16px;
+  background:var(--card);border:1.5px solid var(--border);
+  border-radius:12px;font-size:15px;font-weight:500;
+  cursor:pointer;font-family:inherit;text-align:left;
+  display:flex;align-items:flex-start;gap:12px;
+  transition:all 0.15s;-webkit-tap-highlight-color:transparent;
+  color:var(--text);line-height:1.4;
+}
+.option-btn:active{transform:scale(0.98);}
+.option-letter{
+  width:24px;height:24px;border-radius:50%;
+  background:var(--border);display:flex;align-items:center;
+  justify-content:center;font-size:12px;font-weight:700;
+  flex-shrink:0;margin-top:1px;color:var(--muted);
+}
+.option-btn.correct{background:#f0fdf4;border-color:var(--success);}
+.option-btn.correct .option-letter{background:var(--success);color:#fff;}
+.option-btn.wrong{background:#fef2f2;border-color:var(--danger);}
+.option-btn.wrong .option-letter{background:var(--danger);color:#fff;}
+.option-btn.disabled{cursor:default;}
+
+.explanation-card{
+  background:#f8faff;border:1.5px solid #bfdbfe;
+  border-radius:var(--radius);padding:14px;margin-bottom:14px;
+}
+.explanation-label{font-size:11px;font-weight:700;color:#1d4ed8;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;}
+.explanation-text{font-size:14px;line-height:1.6;color:var(--text);}
+
+.next-btn{
+  width:100%;padding:15px;background:var(--accent);color:#fff;
+  border:none;border-radius:var(--radius);font-size:16px;font-weight:700;
+  cursor:pointer;font-family:inherit;
+}
+
+/* Result card */
+.result-card{
+  text-align:center;background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:28px 20px;margin-bottom:14px;
+}
+.result-score{font-size:56px;font-weight:700;line-height:1;}
+.result-label{font-size:16px;color:var(--muted);margin-top:4px;}
+.result-message{font-size:15px;font-weight:500;margin-top:12px;line-height:1.4;}
+
+/* Notes / Generate Screen */
+.notes-area{
+  width:100%;min-height:160px;padding:13px;
+  border:1.5px solid var(--border);border-radius:12px;
+  font-size:14px;font-family:inherit;background:var(--bg);
+  color:var(--text);resize:vertical;outline:none;line-height:1.5;
+}
+.notes-area:focus{border-color:var(--accent2);}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.5px;}
+.field select,.field input{
+  width:100%;padding:11px 13px;border:1.5px solid var(--border);
+  border-radius:10px;font-size:15px;font-family:inherit;
+  background:var(--bg);color:var(--text);outline:none;-webkit-appearance:none;
+}
+.field select:focus,.field input:focus{border-color:var(--accent2);}
+
+.generating-state{
+  text-align:center;padding:32px 20px;
+}
+.generating-state .spinner{
+  width:40px;height:40px;border:3px solid var(--border);
+  border-top-color:var(--accent2);border-radius:50%;
+  animation:spin 0.8s linear infinite;margin:0 auto 16px;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+.generating-state p{font-size:15px;color:var(--muted);}
+
+/* Settings */
+.settings-section{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);margin-bottom:14px;overflow:hidden;}
+.settings-row{padding:13px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.settings-row:last-child{border-bottom:none;}
+.settings-label{flex:1;}
+.settings-label label{font-size:15px;font-weight:500;display:block;}
+.settings-label .sub{font-size:12px;color:var(--muted);}
+.settings-row input[type=text],.settings-row input[type=number],.settings-row select{
+  border:1px solid var(--border);border-radius:8px;padding:7px 10px;
+  font-size:14px;font-family:inherit;background:var(--bg);
+  color:var(--text);max-width:130px;-webkit-appearance:none;outline:none;
+}
+.api-input{max-width:none!important;width:100%;margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:13px;}
+
+/* Day plan */
+.day-plan-row{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:13px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;
+}
+.day-dot{width:10px;height:10px;border-radius:50%;background:var(--border);flex-shrink:0;}
+.day-dot.done{background:var(--success);}
+.day-dot.active{background:var(--accent2);}
+.day-plan-info{flex:1;}
+.day-plan-title{font-size:14px;font-weight:600;}
+.day-plan-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+.day-plan-score{font-size:13px;font-weight:700;color:var(--muted);}
+
+/* Notification bell */
+.notif-badge{
+  position:relative;display:inline-flex;
+}
+.notif-badge .badge{
+  position:absolute;top:-4px;right:-4px;width:8px;height:8px;
+  border-radius:50%;background:#ef4444;border:2px solid var(--accent);
+}
+
+/* Toast */
+.toast{
+  position:fixed;bottom:calc(62px + env(safe-area-inset-bottom,0px));
+  left:50%;transform:translateX(-50%);
+  background:#0f1f30;color:#fff;padding:10px 20px;border-radius:30px;
+  font-size:14px;font-weight:500;opacity:0;transition:opacity 0.3s;
+  pointer-events:none;white-space:nowrap;z-index:200;
+}
+.toast.show{opacity:1;}
+
+/* Empty state */
+.empty-state{text-align:center;padding:32px 20px;color:var(--muted);}
+.empty-state i{font-size:48px;margin-bottom:12px;display:block;opacity:0.3;}
+.empty-state p{font-size:15px;}
+
+.q-count-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:#eff6ff;color:#1d4ed8;padding:6px 14px;
+  border-radius:20px;font-size:13px;font-weight:600;margin-bottom:14px;
+}
+
+.interval-row{display:flex;gap:8px;margin-bottom:14px;}
+.interval-btn{
+  flex:1;padding:10px;border:1.5px solid var(--border);border-radius:10px;
+  background:var(--card);font-size:13px;font-weight:600;cursor:pointer;
+  font-family:inherit;color:var(--text);-webkit-tap-highlight-color:transparent;
+}
+.interval-btn.active{background:var(--accent2);color:#fff;border-color:var(--accent2);}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="header">
+    <div>
+      <h1>MCCQE1 Paeds</h1>
+      <div class="sub" id="header-day">Loading...</div>
+    </div>
+    <div class="header-right">
+      <div class="streak" id="streak-badge">🔥 0</div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD SCREEN -->
+  <div class="screen active" id="screen-dash">
+    <div class="day-banner" id="day-banner">
+      <div class="day-label">Today — Day <span id="current-day-num">1</span> of 5</div>
+      <div class="day-title" id="day-title">Child Abuse + Development</div>
+      <div class="day-pages" id="day-pages">Pages 13–17</div>
+      <div class="day-topics" id="day-topics">Chunks 4–5: HEEADSSS, CRAFFT, Consent, NAI, Milestones, Endocrinology</div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card green">
+        <div class="stat-num" id="stat-correct">0</div>
+        <div class="stat-label">Correct today</div>
+      </div>
+      <div class="stat-card blue">
+        <div class="stat-num" id="stat-total">0</div>
+        <div class="stat-label">Questions done</div>
+      </div>
+      <div class="stat-card amber">
+        <div class="stat-num" id="stat-pct">—</div>
+        <div class="stat-label">Today's score</div>
+      </div>
+      <div class="stat-card red">
+        <div class="stat-num" id="stat-retry">0</div>
+        <div class="stat-label">To retry</div>
+      </div>
+    </div>
+
+    <div class="card" id="daily-progress-card">
+      <div class="card-title">Daily goal</div>
+      <div class="progress-bar-wrap"><div class="progress-bar" id="daily-progress-bar" style="width:0%"></div></div>
+      <div class="progress-labels"><span id="progress-done">0 done</span><span id="progress-target">30 target</span></div>
+    </div>
+
+    <button class="btn-primary" onclick="startQuiz()" id="start-quiz-btn">
+      <i class="ti ti-brain" aria-hidden="true"></i> Start questions
+    </button>
+    <button class="btn-secondary" onclick="showScreen('generate', document.querySelectorAll('.nav-btn')[2])">
+      + Load new notes / generate questions
+    </button>
+
+    <div class="card" style="margin-top:14px;">
+      <div class="card-title">5-day plan</div>
+      <div id="day-plan-list"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Score by topic</div>
+      <div id="topic-scores"></div>
+    </div>
+  </div>
+
+  <!-- QUIZ SCREEN -->
+  <div class="screen" id="screen-quiz">
+    <div id="quiz-content"></div>
+  </div>
+
+  <!-- GENERATE SCREEN -->
+  <div class="screen" id="screen-generate">
+    <div class="card">
+      <div class="card-title">API key</div>
+      <div class="field">
+        <input type="password" class="api-input" id="api-key-input" placeholder="sk-ant-api..." onchange="saveApiKey(this.value)">
+      </div>
+      <p style="font-size:12px;color:var(--muted);line-height:1.5;">Get your key at console.anthropic.com. Stored locally on your phone only.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Generate questions from notes</div>
+      <div class="field">
+        <label>Which day is this for?</label>
+        <select id="gen-day">
+          <option value="1">Day 1 — Child Abuse + Development + Endocrinology</option>
+          <option value="2">Day 2 — Fluids + GI + Genetics</option>
+          <option value="3">Day 3 — Neonatology + Nephrology + Neurology</option>
+          <option value="4">Day 4 — Cardiology + Orthopaedics + Oncology</option>
+          <option value="5">Day 5 — Psychiatry + Urology + Review</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>How many questions?</label>
+        <div class="interval-row">
+          <button class="interval-btn active" onclick="setQCount(20,this)">20</button>
+          <button class="interval-btn" onclick="setQCount(30,this)">30</button>
+          <button class="interval-btn" onclick="setQCount(40,this)">40</button>
+          <button class="interval-btn" onclick="setQCount(50,this)">50</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Paste your notes here</label>
+        <textarea class="notes-area" id="notes-input" placeholder="Paste your paeds notes, chunks, or Q&A material here. The more detail you paste, the better the questions generated.&#10;&#10;You can paste the full PDF text or just today's chunk."></textarea>
+      </div>
+      <button class="btn-primary" onclick="generateQuestions()" id="gen-btn">
+        <i class="ti ti-sparkles" aria-hidden="true"></i> Generate questions
+      </button>
+    </div>
+
+    <div id="gen-status"></div>
+  </div>
+
+  <!-- SETTINGS SCREEN -->
+  <div class="screen" id="screen-settings">
+    <div class="settings-section">
+      <div class="settings-row">
+        <div class="settings-label">
+          <label>Notification interval</label>
+          <div class="sub">How often questions fire</div>
+        </div>
+      </div>
+      <div class="settings-row" style="flex-wrap:wrap;gap:8px;">
+        <div class="interval-row" style="width:100%;margin:0;">
+          <button class="interval-btn active" id="int-15" onclick="setInterval2(15,this)">15 min</button>
+          <button class="interval-btn" id="int-20" onclick="setInterval2(20,this)">20 min</button>
+          <button class="interval-btn" id="int-30" onclick="setInterval2(30,this)">30 min</button>
+          <button class="interval-btn" id="int-60" onclick="setInterval2(60,this)">1 hour</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-row">
+        <div class="settings-label">
+          <label>Daily question target</label>
+          <div class="sub">Goal per day</div>
+        </div>
+        <input type="number" id="daily-target-input" value="30" min="10" max="100" onchange="saveSetting('dailyTarget',parseInt(this.value));updateDash()">
+      </div>
+      <div class="settings-row">
+        <div class="settings-label">
+          <label>Current day</label>
+          <div class="sub">Which day of the plan are you on?</div>
+        </div>
+        <select id="current-day-select" onchange="saveSetting('currentDay',parseInt(this.value));updateDash()">
+          <option value="1">Day 1</option>
+          <option value="2">Day 2</option>
+          <option value="3">Day 3</option>
+          <option value="4">Day 4</option>
+          <option value="5">Day 5</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:8px;">
+        <div class="settings-label"><label>Enable notifications</label><div class="sub">Required for 15-min question alerts</div></div>
+        <button class="btn-secondary" style="margin:0;" onclick="requestNotifications()">Request permission</button>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:8px;">
+        <div class="settings-label"><label style="color:var(--danger);">Reset today's progress</label><div class="sub">Clears today's answers only</div></div>
+        <button class="btn-danger" style="margin:0;" onclick="resetToday()">Reset today</button>
+      </div>
+      <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:8px;">
+        <div class="settings-label"><label style="color:var(--danger);">Clear all data</label><div class="sub">Wipes everything including questions</div></div>
+        <button class="btn-danger" style="margin:0;" onclick="clearAll()">Clear all</button>
+      </div>
+    </div>
+
+    <p style="text-align:center;font-size:12px;color:var(--muted);padding:8px 0 16px;">MCCQE1 Quiz v1.0 — built for Shakeel</p>
+  </div>
+
+  <nav class="nav">
+    <button class="nav-btn active" onclick="showScreen('dash',this)" aria-label="Dashboard">
+      <i class="ti ti-layout-dashboard" aria-hidden="true"></i>Today
+    </button>
+    <button class="nav-btn" onclick="showScreen('quiz',this);startQuiz()" aria-label="Quiz">
+      <i class="ti ti-brain" aria-hidden="true"></i>Quiz
+    </button>
+    <button class="nav-btn" onclick="showScreen('generate',this)" aria-label="Generate">
+      <i class="ti ti-sparkles" aria-hidden="true"></i>Generate
+    </button>
+    <button class="nav-btn" onclick="showScreen('settings',this)" aria-label="Settings">
+      <i class="ti ti-settings" aria-hidden="true"></i>Settings
+    </button>
+  </nav>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+// ── State ──────────────────────────────────────────────
+let questions = JSON.parse(localStorage.getItem('mq_questions') || '[]');
+let answered = JSON.parse(localStorage.getItem('mq_answered') || '{}');
+let wrongIds = JSON.parse(localStorage.getItem('mq_wrong') || '[]');
+let topicScores = JSON.parse(localStorage.getItem('mq_topics') || '{}');
+let settings = JSON.parse(localStorage.getItem('mq_settings') || '{"currentDay":1,"dailyTarget":30,"interval":15}');
+let apiKey = localStorage.getItem('mq_apikey') || '';
+let genQCount = 20;
+let notifInterval = null;
+let currentQ = null;
+let currentQIndex = 0;
+let quizQueue = [];
+let todayKey = new Date().toISOString().split('T')[0];
+let todayAnswers = JSON.parse(localStorage.getItem('mq_today_' + todayKey) || '{"correct":0,"total":0}');
+let streakDays = parseInt(localStorage.getItem('mq_streak') || '0');
+
+const DAY_PLAN = [
+  {day:1, title:"Child Abuse + Development", pages:"Pages 13–17", topics:"Chunks 4–5: HEEADSSS, CRAFFT, Consent, NAI, Milestones, Endocrinology"},
+  {day:2, title:"Fluids + GI + Genetics", pages:"Pages 17–21", topics:"Chunks 6–7: Dehydration, GI emergencies, Genetic syndromes, Haematology"},
+  {day:3, title:"Neonatology + Nephrology + Neurology", pages:"Pages 21–25", topics:"Chunks 8–9: Jaundice, RDS, NEC, HUS, Nephrotic/Nephritic, CP, Seizures"},
+  {day:4, title:"Cardiology + Orthopaedics + Oncology", pages:"Pages 25–30", topics:"Chunks 10–11: CHD, Murmurs, SCFE, Septic arthritis, ALL, Wilms', Neuroblastoma"},
+  {day:5, title:"Psychiatry + Urology + Full Review", pages:"Pages 30–34", topics:"Chunk 12: ASD, ADHD, Circumcision + Weak area review"}
+];
+
+// ── Init ───────────────────────────────────────────────
+function init() {
+  if (apiKey) document.getElementById('api-key-input').value = apiKey;
+  if (settings.currentDay) document.getElementById('current-day-select').value = settings.currentDay;
+  if (settings.dailyTarget) document.getElementById('daily-target-input').value = settings.dailyTarget;
+  setIntervalUI(settings.interval || 15);
+  updateDash();
+  startNotifLoop();
+  updateStreak();
+}
+
+function updateStreak() {
+  document.getElementById('streak-badge').textContent = '🔥 ' + streakDays;
+}
+
+// ── Navigation ──────────────────────────────────────────
+function showScreen(name, btn) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (name === 'dash') updateDash();
+}
+
+// ── Dashboard ───────────────────────────────────────────
+function updateDash() {
+  const day = settings.currentDay || 1;
+  const plan = DAY_PLAN[day - 1];
+  const target = settings.dailyTarget || 30;
+
+  document.getElementById('current-day-num').textContent = day;
+  document.getElementById('day-title').textContent = plan.title;
+  document.getElementById('day-pages').textContent = plan.pages;
+  document.getElementById('day-topics').textContent = plan.topics;
+  document.getElementById('header-day').textContent = 'Day ' + day + ' of 5 — ' + plan.title;
+
+  // Stats
+  const pct = todayAnswers.total > 0 ? Math.round((todayAnswers.correct / todayAnswers.total) * 100) : null;
+  document.getElementById('stat-correct').textContent = todayAnswers.correct;
+  document.getElementById('stat-total').textContent = todayAnswers.total;
+  document.getElementById('stat-pct').textContent = pct !== null ? pct + '%' : '—';
+  document.getElementById('stat-retry').textContent = wrongIds.length;
+
+  // Progress bar
+  const prog = Math.min(100, Math.round((todayAnswers.total / target) * 100));
+  document.getElementById('daily-progress-bar').style.width = prog + '%';
+  document.getElementById('progress-done').textContent = todayAnswers.total + ' done';
+  document.getElementById('progress-target').textContent = target + ' target';
+
+  // Day plan
+  let planHtml = '';
+  DAY_PLAN.forEach(p => {
+    const isDone = p.day < day;
+    const isActive = p.day === day;
+    planHtml += `<div class="day-plan-row">
+      <div class="day-dot ${isDone?'done':isActive?'active':''}"></div>
+      <div class="day-plan-info">
+        <div class="day-plan-title">Day ${p.day} — ${p.title}</div>
+        <div class="day-plan-sub">${p.pages}</div>
+      </div>
+      ${isDone ? '<div class="day-plan-score" style="color:var(--success);">✓</div>' : ''}
+      ${isActive ? '<div class="day-plan-score" style="color:var(--accent2);">Today</div>' : ''}
+    </div>`;
+  });
+  document.getElementById('day-plan-list').innerHTML = planHtml;
+
+  // Topic scores
+  const topics = Object.entries(topicScores);
+  if (!topics.length) {
+    document.getElementById('topic-scores').innerHTML = '<p style="font-size:13px;color:var(--muted);padding:8px 0;">No data yet. Answer some questions first.</p>';
+  } else {
+    let html = '';
+    topics.forEach(([topic, data]) => {
+      const pct = data.total > 0 ? Math.round((data.correct / data.total) * 100) : 0;
+      const col = pct >= 70 ? 'var(--success)' : pct >= 50 ? 'var(--warning)' : 'var(--danger)';
+      html += `<div class="topic-row">
+        <span class="topic-name">${topic}</span>
+        <div class="topic-bar"><div class="topic-fill" style="width:${pct}%;background:${col};"></div></div>
+        <span class="topic-score" style="color:${col};">${pct}%</span>
+      </div>`;
+    });
+    document.getElementById('topic-scores').innerHTML = html;
+  }
+
+  // Questions available
+  const avail = getAvailableQuestions();
+  document.getElementById('start-quiz-btn').textContent = avail.length > 0
+    ? `Start questions (${avail.length} available)`
+    : 'Start questions';
+}
+
+// ── Quiz ────────────────────────────────────────────────
+function getAvailableQuestions() {
+  const day = settings.currentDay || 1;
+  let pool = questions.filter(q => q.day === day || q.day === 0);
+  // Prioritise wrong answers
+  const wrongFirst = pool.filter(q => wrongIds.includes(q.id));
+  const rest = pool.filter(q => !wrongIds.includes(q.id));
+  return [...wrongFirst, ...rest];
+}
+
+function startQuiz() {
+  showScreen('quiz', document.querySelectorAll('.nav-btn')[1]);
+  quizQueue = getAvailableQuestions();
+  if (!quizQueue.length) {
+    document.getElementById('quiz-content').innerHTML = `
+      <div class="empty-state">
+        <i class="ti ti-brain" aria-hidden="true"></i>
+        <p style="font-size:16px;font-weight:600;margin-bottom:8px;">No questions loaded yet.</p>
+        <p>Go to Generate tab, paste your notes, and hit Generate.</p>
+      </div>
+      <button class="btn-primary" onclick="showScreen('generate',document.querySelectorAll('.nav-btn')[2])">
+        <i class="ti ti-sparkles"></i> Generate questions
+      </button>`;
+    return;
+  }
+  currentQIndex = 0;
+  showQuestion();
+}
+
+function showQuestion() {
+  if (currentQIndex >= quizQueue.length) {
+    showSessionResult();
+    return;
+  }
+  currentQ = quizQueue[currentQIndex];
+  const letters = ['A','B','C','D','E'];
+  const opts = currentQ.options.map((opt, i) => `
+    <button class="option-btn" onclick="answerQuestion(${i})" id="opt-${i}">
+      <span class="option-letter">${letters[i]}</span>
+      <span>${escHtml(opt)}</span>
+    </button>`).join('');
+
+  document.getElementById('quiz-content').innerHTML = `
+    <div class="quiz-header">
+      <span class="q-counter">Q${currentQIndex + 1} / ${quizQueue.length}</span>
+      <span class="q-topic">${escHtml(currentQ.topic || 'Paediatrics')}</span>
+    </div>
+    <div class="question-card">
+      <div class="question-text">${escHtml(currentQ.question)}</div>
+    </div>
+    <div class="options-list" id="options-list">${opts}</div>`;
+}
+
+function answerQuestion(selectedIdx) {
+  const correct = currentQ.correctIndex;
+  const isCorrect = selectedIdx === correct;
+  const letters = ['A','B','C','D','E'];
+
+  // Disable all buttons
+  document.querySelectorAll('.option-btn').forEach((btn, i) => {
+    btn.classList.add('disabled');
+    btn.onclick = null;
+    if (i === correct) btn.classList.add('correct');
+    if (i === selectedIdx && !isCorrect) btn.classList.add('wrong');
+  });
+
+  // Update scores
+  todayAnswers.total++;
+  if (isCorrect) {
+    todayAnswers.correct++;
+    wrongIds = wrongIds.filter(id => id !== currentQ.id);
+  } else {
+    if (!wrongIds.includes(currentQ.id)) wrongIds.push(currentQ.id);
+  }
+
+  // Topic tracking
+  const topic = currentQ.topic || 'General';
+  if (!topicScores[topic]) topicScores[topic] = {correct:0, total:0};
+  topicScores[topic].total++;
+  if (isCorrect) topicScores[topic].correct++;
+
+  // Save
+  saveTodayAnswers();
+  localStorage.setItem('mq_wrong', JSON.stringify(wrongIds));
+  localStorage.setItem('mq_topics', JSON.stringify(topicScores));
+
+  // Show explanation
+  const expHtml = `
+    <div class="explanation-card">
+      <div class="explanation-label">${isCorrect ? '✓ Correct' : '✗ Incorrect — correct answer: ' + letters[correct]}</div>
+      <div class="explanation-text">${escHtml(currentQ.explanation)}</div>
+    </div>
+    <button class="next-btn" onclick="nextQuestion()">${currentQIndex + 1 < quizQueue.length ? 'Next question' : 'See results'}</button>`;
+
+  document.getElementById('quiz-content').innerHTML += expHtml;
+  document.getElementById('quiz-content').scrollTop = document.getElementById('quiz-content').scrollHeight;
+}
+
+function nextQuestion() {
+  currentQIndex++;
+  showQuestion();
+  document.getElementById('screen-quiz').scrollTop = 0;
+}
+
+function showSessionResult() {
+  const total = quizQueue.length;
+  const correct = quizQueue.filter(q => !wrongIds.includes(q.id)).length;
+  const pct = Math.round((todayAnswers.correct / (todayAnswers.total || 1)) * 100);
+  const msg = pct >= 80 ? "Strong session. You're on track." : pct >= 60 ? "Decent. Focus on the ones you missed." : "Keep going — repetition is the key.";
+
+  // Update streak
+  const lastActive = localStorage.getItem('mq_last_active');
+  const yesterday = new Date(); yesterday.setDate(yesterday.getDate()-1);
+  const yKey = yesterday.toISOString().split('T')[0];
+  if (lastActive === yKey || !lastActive) {
+    if (todayAnswers.total >= (settings.dailyTarget || 30)) {
+      streakDays++;
+      localStorage.setItem('mq_streak', streakDays);
+      updateStreak();
+    }
+  }
+  localStorage.setItem('mq_last_active', todayKey);
+
+  document.getElementById('quiz-content').innerHTML = `
+    <div class="result-card">
+      <div class="result-score" style="color:${pct>=70?'var(--success)':pct>=50?'var(--warning)':'var(--danger)'}">${pct}%</div>
+      <div class="result-label">Today's overall score</div>
+      <div class="result-message">${msg}</div>
+    </div>
+    <div class="stat-grid">
+      <div class="stat-card green"><div class="stat-num">${todayAnswers.correct}</div><div class="stat-label">Correct today</div></div>
+      <div class="stat-card red"><div class="stat-num">${wrongIds.length}</div><div class="stat-label">To retry</div></div>
+    </div>
+    ${wrongIds.length > 0 ? `<button class="btn-primary" onclick="retryWrong()" style="margin-bottom:10px;"><i class="ti ti-refresh"></i> Retry wrong answers</button>` : ''}
+    <button class="btn-secondary" onclick="showScreen('dash',document.querySelectorAll('.nav-btn')[0])">Back to dashboard</button>`;
+}
+
+function retryWrong() {
+  quizQueue = questions.filter(q => wrongIds.includes(q.id));
+  currentQIndex = 0;
+  showQuestion();
+}
+
+// ── Generate Questions ──────────────────────────────────
+function setQCount(n, btn) {
+  genQCount = n;
+  document.querySelectorAll('.interval-row .interval-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+async function generateQuestions() {
+  const key = document.getElementById('api-key-input').value.trim() || apiKey;
+  const notes = document.getElementById('notes-input').value.trim();
+  const day = parseInt(document.getElementById('gen-day').value);
+
+  if (!key) { showToast('Enter your API key first.'); return; }
+  if (!notes || notes.length < 100) { showToast('Paste some notes first.'); return; }
+
+  saveApiKey(key);
+
+  const btn = document.getElementById('gen-btn');
+  btn.disabled = true;
+  document.getElementById('gen-status').innerHTML = `
+    <div class="generating-state">
+      <div class="spinner"></div>
+      <p>Generating ${genQCount} MCCQE1-style questions...<br>This takes about 20–30 seconds.</p>
+    </div>`;
+
+  const prompt = `You are an MCCQE1 exam question writer specialising in Paediatrics. 
+
+Generate exactly ${genQCount} high-yield MCCQE1-style multiple choice questions based ONLY on the notes provided below.
+
+STRICT RULES:
+- Each question must be a clinical vignette (patient scenario) — not a direct factual recall question
+- 4-5 answer options per question (A, B, C, D, E)
+- Only ONE correct answer
+- Questions must test clinical reasoning, not just memorisation
+- Cover different topics from the notes — do not repeat the same concept
+- Difficulty: appropriate for MCCQE1 (moderate to hard)
+
+Return ONLY a JSON array. No preamble, no markdown, no explanation. Just the raw JSON array.
+
+Format:
+[
+  {
+    "id": "unique_string_id",
+    "question": "Clinical vignette question text here",
+    "options": ["Option A text", "Option B text", "Option C text", "Option D text"],
+    "correctIndex": 0,
+    "explanation": "Concise explanation of why the correct answer is right and why the others are wrong. Include the key teaching point.",
+    "topic": "Topic name (e.g. Enuresis, FTT, Child Abuse, Milestones, etc.)"
+  }
+]
+
+NOTES TO USE:
+${notes.substring(0, 12000)}`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5',
+        max_tokens: 8000,
+        messages: [{role: 'user', content: prompt}]
+      })
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error?.message || 'API error ' + response.status);
+    }
+
+    const data = await response.json();
+    const text = data.content[0].text.trim();
+
+    // Parse JSON
+    let newQs;
+    try {
+      const clean = text.replace(/```json|```/g, '').trim();
+      newQs = JSON.parse(clean);
+    } catch(e) {
+      throw new Error('Could not parse questions. Try again.');
+    }
+
+    if (!Array.isArray(newQs) || !newQs.length) throw new Error('No questions returned.');
+
+    // Tag with day and unique IDs
+    newQs = newQs.map((q, i) => ({
+      ...q,
+      id: 'q_' + day + '_' + Date.now() + '_' + i,
+      day: day
+    }));
+
+    // Add to bank, avoid duplicates by question text
+    const existing = new Set(questions.map(q => q.question.substring(0,60)));
+    const fresh = newQs.filter(q => !existing.has(q.question.substring(0,60)));
+    questions = [...questions, ...fresh];
+    localStorage.setItem('mq_questions', JSON.stringify(questions));
+
+    document.getElementById('gen-status').innerHTML = `
+      <div class="card" style="background:#f0fdf4;border-color:#bbf7d0;">
+        <div style="font-size:16px;font-weight:700;color:var(--success);margin-bottom:4px;">✓ ${fresh.length} questions generated</div>
+        <div style="font-size:13px;color:var(--muted);">Tagged for Day ${day}. Ready in the Quiz tab.</div>
+      </div>`;
+
+    document.getElementById('notes-input').value = '';
+    showToast(fresh.length + ' questions ready.');
+    updateDash();
+
+  } catch(err) {
+    document.getElementById('gen-status').innerHTML = `
+      <div class="card" style="background:#fef2f2;border-color:#fecaca;">
+        <div style="font-size:14px;font-weight:600;color:var(--danger);">Error: ${escHtml(err.message)}</div>
+      </div>`;
+    showToast('Generation failed. Check API key.');
+  }
+
+  btn.disabled = false;
+}
+
+// ── Notifications ───────────────────────────────────────
+function requestNotifications() {
+  if ('Notification' in window) {
+    Notification.requestPermission().then(p => {
+      showToast(p === 'granted' ? 'Notifications enabled!' : 'Permission denied.');
+    });
+  } else {
+    showToast('Notifications not supported in this browser.');
+  }
+}
+
+function startNotifLoop() {
+  if (notifInterval) clearInterval(notifInterval);
+  const mins = settings.interval || 15;
+  notifInterval = setInterval(() => {
+    fireQuestionNotification();
+  }, mins * 60 * 1000);
+}
+
+function fireQuestionNotification() {
+  const pool = getAvailableQuestions();
+  if (!pool.length) return;
+  const q = pool[Math.floor(Math.random() * Math.min(pool.length, 10))];
+  if (!q) return;
+
+  if ('Notification' in window && Notification.permission === 'granted') {
+    const n = new Notification('MCCQE1 Question', {
+      body: q.question.substring(0, 120) + '...',
+      icon: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"%3E%3Crect width="64" height="64" rx="12" fill="%231a3a5c"/%3E%3Ctext x="32" y="44" font-size="36" text-anchor="middle" fill="white"%3E%F0%9F%A7%A0%3C/text%3E%3C/svg%3E',
+      tag: 'mccqe1-question'
+    });
+    n.onclick = () => {
+      window.focus();
+      // Find and show the specific question
+      quizQueue = [q, ...pool.filter(p => p.id !== q.id)];
+      currentQIndex = 0;
+      showScreen('quiz', document.querySelectorAll('.nav-btn')[1]);
+      showQuestion();
+    };
+  }
+}
+
+// ── Settings ────────────────────────────────────────────
+function setInterval2(mins, btn) {
+  document.querySelectorAll('[id^=int-]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  saveSetting('interval', mins);
+  startNotifLoop();
+  showToast('Interval set to ' + mins + ' min.');
+}
+
+function setIntervalUI(mins) {
+  document.querySelectorAll('[id^=int-]').forEach(b => b.classList.remove('active'));
+  const el = document.getElementById('int-' + mins);
+  if (el) el.classList.add('active');
+}
+
+function saveSetting(k, v) {
+  settings[k] = v;
+  localStorage.setItem('mq_settings', JSON.stringify(settings));
+}
+
+function saveApiKey(v) {
+  apiKey = v;
+  localStorage.setItem('mq_apikey', v);
+}
+
+function saveTodayAnswers() {
+  localStorage.setItem('mq_today_' + todayKey, JSON.stringify(todayAnswers));
+}
+
+function resetToday() {
+  if (!confirm('Reset today\'s progress?')) return;
+  todayAnswers = {correct:0, total:0};
+  saveTodayAnswers();
+  updateDash();
+  showToast('Today reset.');
+}
+
+function clearAll() {
+  if (!confirm('Clear ALL data including questions?')) return;
+  if (!confirm('Are you sure? This cannot be undone.')) return;
+  ['mq_questions','mq_answered','mq_wrong','mq_topics','mq_settings','mq_today_'+todayKey].forEach(k => localStorage.removeItem(k));
+  questions = []; answered = {}; wrongIds = []; topicScores = {};
+  todayAnswers = {correct:0,total:0};
+  updateDash();
+  showToast('All data cleared.');
+}
+
+// ── Utils ───────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Service Worker ──────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  const swCode = `
+    const CACHE='mccqe1-v1';
+    self.addEventListener('install',e=>{self.skipWaiting();});
+    self.addEventListener('fetch',e=>{
+      if(e.request.method!=='GET')return;
+      e.respondWith(caches.match(e.request).then(c=>{
+        return c||fetch(e.request).then(r=>{
+          caches.open(CACHE).then(cache=>cache.put(e.request,r.clone()));
+          return r;
+        }).catch(()=>c);
+      }));
+    });
+  `;
+  const swBlob = new Blob([swCode],{type:'application/javascript'});
+  navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(()=>{});
+}
+
+init();
+</script>
+</body>
+</html>
