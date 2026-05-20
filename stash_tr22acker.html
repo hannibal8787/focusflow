@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Stash Tracker">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#5c3f6b">
+<title>Stash Tracker</title>
+
+<script>
+const manifestData = {
+  name: "Breast Milk Stash Tracker",
+  short_name: "Stash",
+  description: "Track your breast milk freezer stash",
+  start_url: "./stash_tracker.html",
+  display: "standalone",
+  background_color: "#faf8fc",
+  theme_color: "#5c3f6b",
+  orientation: "portrait",
+  icons: [
+    { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%235c3f6b'/%3E%3Ctext x='96' y='130' font-size='100' text-anchor='middle' fill='white'%3E%F0%9F%A5%9B%3C/text%3E%3C/svg%3E", sizes: "192x192", type: "image/svg+xml" },
+    { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='100' fill='%235c3f6b'/%3E%3Ctext x='256' y='340' font-size='260' text-anchor='middle' fill='white'%3E%F0%9F%A5%9B%3C/text%3E%3C/svg%3E", sizes: "512x512", type: "image/svg+xml" }
+  ]
+};
+const blob = new Blob([JSON.stringify(manifestData)], {type: 'application/json'});
+const manifestURL = URL.createObjectURL(blob);
+const link = document.createElement('link');
+link.rel = 'manifest';
+link.href = manifestURL;
+document.head.appendChild(link);
+</script>
+
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#faf8fc;--card:#ffffff;--text:#1a0f22;--muted:#7a6a88;
+  --accent:#5c3f6b;--accent2:#8b5cf6;--border:#e8e0f0;--radius:14px;
+  --success:#16a34a;--danger:#dc2626;--warning:#d97706;--info:#2563eb;
+}
+html,body{height:100%;overflow:hidden;}
+body{
+  font-family:'DM Sans',system-ui,sans-serif;
+  background:var(--bg);color:var(--text);
+  max-width:430px;margin:0 auto;
+  display:flex;flex-direction:column;
+  height:100vh;height:100dvh;
+}
+.app{display:flex;flex-direction:column;height:100%;}
+.header{
+  background:var(--accent);color:#fff;
+  padding:calc(env(safe-area-inset-top,0px) + 14px) 20px 14px;
+  flex-shrink:0;
+}
+.header h1{font-size:19px;font-weight:700;}
+.header .sub{font-size:12px;opacity:0.7;margin-top:1px;}
+.screen{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;display:none;}
+.screen.active{display:block;}
+.nav{
+  display:flex;background:var(--card);border-top:1px solid var(--border);
+  flex-shrink:0;padding-bottom:env(safe-area-inset-bottom,0px);
+}
+.nav-btn{
+  flex:1;padding:10px 4px 8px;border:none;background:none;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  font-size:10px;color:var(--muted);font-family:inherit;
+  -webkit-tap-highlight-color:transparent;min-height:54px;
+}
+.nav-btn i{font-size:21px;}
+.nav-btn.active{color:var(--accent2);}
+.stat-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:14px;}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;}
+.stat-num{font-size:28px;font-weight:700;color:var(--accent);}
+.stat-label{font-size:12px;color:var(--muted);margin-top:2px;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px;}
+.card-title{font-size:11px;font-weight:700;letter-spacing:0.7px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;}
+.field{margin-bottom:13px;}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.4px;}
+.field input,.field select,.field textarea{
+  width:100%;padding:11px 13px;border:1.5px solid var(--border);
+  border-radius:10px;font-size:15px;font-family:inherit;
+  background:var(--bg);color:var(--text);outline:none;-webkit-appearance:none;
+}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent2);}
+.field textarea{resize:vertical;min-height:70px;}
+.row{display:flex;gap:10px;}
+.row .field{flex:1;}
+.btn-primary{
+  width:100%;padding:14px;background:var(--accent);color:#fff;
+  border:none;border-radius:var(--radius);font-size:15px;font-weight:700;
+  cursor:pointer;font-family:inherit;display:flex;align-items:center;
+  justify-content:center;gap:8px;-webkit-tap-highlight-color:transparent;
+}
+.btn-secondary{
+  width:100%;padding:12px;background:none;border:1.5px solid var(--border);
+  color:var(--text);border-radius:var(--radius);font-size:14px;font-weight:600;
+  cursor:pointer;font-family:inherit;margin-top:10px;
+}
+.btn-sm{
+  padding:6px 12px;font-size:12px;font-weight:600;border-radius:8px;
+  border:1.5px solid var(--border);background:none;cursor:pointer;
+  font-family:inherit;color:var(--text);-webkit-tap-highlight-color:transparent;
+}
+.btn-donate{border-color:#bbf7d0;color:var(--success);}
+.btn-use{border-color:#ddd6fe;color:var(--accent2);}
+.btn-disc{border-color:#fecaca;color:var(--danger);}
+.badge{display:inline-block;font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px;}
+.badge-active{background:#f3e8ff;color:#7c3aed;}
+.badge-donated{background:#dbeafe;color:#1d4ed8;}
+.badge-used{background:#f0fdf4;color:var(--success);}
+.badge-discarded{background:#fef2f2;color:var(--danger);}
+.badge-med{background:#fef9c3;color:#854d0e;}
+.zip-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px;}
+.zip-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px;gap:10px;}
+.zip-name{font-size:16px;font-weight:700;}
+.zip-meta{font-size:12px;color:var(--muted);margin-bottom:10px;}
+.bag-row{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-top:1px solid var(--border);}
+.bag-info{flex:1;min-width:0;}
+.bag-name{font-size:14px;font-weight:600;}
+.bag-sub{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4;}
+.bag-actions{display:flex;gap:5px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end;}
+.daily-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);}
+.daily-row:last-child{border-bottom:none;}
+.daily-date{font-size:14px;font-weight:500;}
+.daily-ml{font-size:14px;color:var(--muted);}
+.empty{text-align:center;padding:28px;color:var(--muted);font-size:14px;}
+.section-head{font-size:11px;font-weight:700;letter-spacing:0.7px;text-transform:uppercase;color:var(--muted);margin:16px 0 8px;}
+.check-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.check-row input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent2);}
+.check-row label{font-size:14px;}
+.med-banner{background:#fef9c3;border:1px solid #fde68a;border-radius:var(--radius);padding:12px 14px;margin-bottom:12px;}
+.med-banner-title{font-size:12px;font-weight:700;color:#854d0e;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;}
+.med-banner-text{font-size:13px;color:#713f12;}
+.toast{
+  position:fixed;bottom:calc(64px + env(safe-area-inset-bottom,0px));
+  left:50%;transform:translateX(-50%);
+  background:#1a0f22;color:#fff;padding:10px 20px;border-radius:30px;
+  font-size:14px;font-weight:500;opacity:0;transition:opacity 0.3s;
+  pointer-events:none;white-space:nowrap;z-index:200;
+}
+.toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>Stash Tracker</h1>
+    <div class="sub" id="header-sub">Loading...</div>
+  </div>
+
+  <!-- SUMMARY -->
+  <div class="screen active" id="screen-dash">
+    <div class="stat-grid">
+      <div class="stat"><div class="stat-num" id="s-ml">0</div><div class="stat-label">ml in stash</div></div>
+      <div class="stat"><div class="stat-num" id="s-bags">0</div><div class="stat-label">Bags available</div></div>
+      <div class="stat"><div class="stat-num" id="s-zips">0</div><div class="stat-label">Active ziplocks</div></div>
+      <div class="stat"><div class="stat-num" id="s-donated">0</div><div class="stat-label">Bags donated</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Total pumped (all time)</div>
+      <div style="font-size:26px;font-weight:700;color:var(--accent);" id="s-pump-total">0 ml</div>
+    </div>
+    <div id="med-banner-wrap"></div>
+  </div>
+
+  <!-- LOG -->
+  <div class="screen" id="screen-log">
+    <div class="card">
+      <div class="card-title">Add bag to stash</div>
+      <div class="row">
+        <div class="field">
+          <label>Date (DD/MM/YYYY)</label>
+          <input type="date" id="bag-date">
+        </div>
+        <div class="field">
+          <label>Volume (ml)</label>
+          <input type="number" id="bag-ml" placeholder="120" min="1">
+        </div>
+      </div>
+      <div class="field">
+        <label>Ziplock group</label>
+        <select id="bag-zip" onchange="toggleNewZip()">
+          <option value="">+ New ziplock</option>
+        </select>
+      </div>
+      <div class="field" id="new-zip-wrap">
+        <label>New ziplock name</label>
+        <input type="text" id="new-zip-name" placeholder="e.g. Ziplock A, Week 1 batch...">
+      </div>
+      <div class="check-row">
+        <input type="checkbox" id="bag-med" onchange="toggleMedNotes()">
+        <label for="bag-med">Medication taken this day</label>
+      </div>
+      <div class="field" id="med-notes-wrap" style="display:none;">
+        <label>Medication notes</label>
+        <textarea id="bag-med-notes" placeholder="Which medication, dose, timing..."></textarea>
+      </div>
+      <button class="btn-primary" onclick="addBag()">
+        <i class="ti ti-plus" aria-hidden="true"></i> Add bag
+      </button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Log daily pump output</div>
+      <div class="row">
+        <div class="field">
+          <label>Date (DD/MM/YYYY)</label>
+          <input type="date" id="pump-date">
+        </div>
+        <div class="field">
+          <label>Total (ml)</label>
+          <input type="number" id="pump-ml" placeholder="340" min="1">
+        </div>
+      </div>
+      <button class="btn-primary" style="background:var(--accent2);" onclick="logPump()">
+        <i class="ti ti-chart-bar" aria-hidden="true"></i> Log output
+      </button>
+    </div>
+  </div>
+
+  <!-- STASH -->
+  <div class="screen" id="screen-stash">
+    <div id="stash-list"></div>
+  </div>
+
+  <!-- DAILY -->
+  <div class="screen" id="screen-daily">
+    <div class="card">
+      <div class="card-title">Pump log</div>
+      <div id="daily-list"></div>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <button class="nav-btn active" onclick="showScreen('dash',this)" aria-label="Summary">
+      <i class="ti ti-layout-dashboard" aria-hidden="true"></i>Summary
+    </button>
+    <button class="nav-btn" onclick="showScreen('log',this)" aria-label="Log">
+      <i class="ti ti-plus" aria-hidden="true"></i>Log
+    </button>
+    <button class="nav-btn" onclick="showScreen('stash',this)" aria-label="Stash">
+      <i class="ti ti-archive" aria-hidden="true"></i>Stash
+    </button>
+    <button class="nav-btn" onclick="showScreen('daily',this)" aria-label="Daily">
+      <i class="ti ti-chart-line" aria-hidden="true"></i>Daily
+    </button>
+  </nav>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let data = JSON.parse(localStorage.getItem('bm_data') || '{"bags":[],"ziplocks":[],"pumpLog":[]}');
+
+function save(){localStorage.setItem('bm_data', JSON.stringify(data));}
+
+function showScreen(name, btn){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  btn.classList.add('active');
+  if(name==='dash') renderDash();
+  if(name==='stash') renderStash();
+  if(name==='daily') renderDaily();
+  if(name==='log') renderZipSelect();
+}
+
+function toggleNewZip(){
+  const v = document.getElementById('bag-zip').value;
+  document.getElementById('new-zip-wrap').style.display = v ? 'none' : 'block';
+}
+
+function toggleMedNotes(){
+  document.getElementById('med-notes-wrap').style.display =
+    document.getElementById('bag-med').checked ? 'block' : 'none';
+}
+
+function renderZipSelect(){
+  const sel = document.getElementById('bag-zip');
+  const active = data.ziplocks.filter(z=>z.status==='active');
+  sel.innerHTML = '<option value="">+ New ziplock</option>';
+  active.forEach(z=>{
+    const count = data.bags.filter(b=>b.zipId===z.id&&b.status==='active').length;
+    sel.innerHTML += `<option value="${z.id}">${z.name} (${count} bags)</option>`;
+  });
+  toggleNewZip();
+}
+
+function fmtDate(iso){
+  if(!iso) return '';
+  const [y,m,d] = iso.split('-');
+  return d+'/'+m+'/'+y;
+}
+
+function addBag(){
+  const dateRaw = document.getElementById('bag-date').value;
+  const ml = parseInt(document.getElementById('bag-ml').value);
+  const zipSel = document.getElementById('bag-zip').value;
+  const newZipName = document.getElementById('new-zip-name').value.trim();
+  const hasMed = document.getElementById('bag-med').checked;
+  const medNotes = document.getElementById('bag-med-notes').value.trim();
+
+  if(!dateRaw || !ml){ showToast('Enter date and volume.'); return; }
+  const date = fmtDate(dateRaw);
+
+  let zipId = zipSel;
+  if(!zipSel){
+    if(!newZipName){ showToast('Enter a ziplock name.'); return; }
+    zipId = 'zip_'+Date.now();
+    data.ziplocks.push({id:zipId, name:newZipName, status:'active', created:date});
+  }
+
+  data.bags.push({
+    id: 'bag_'+Date.now(),
+    date, ml, zipId,
+    status: 'active',
+    med: hasMed,
+    medNotes: hasMed ? medNotes : '',
+    added: new Date().toISOString()
+  });
+
+  save();
+  document.getElementById('bag-date').value = '';
+  document.getElementById('bag-ml').value = '';
+  document.getElementById('bag-med').checked = false;
+  document.getElementById('bag-med-notes').value = '';
+  document.getElementById('med-notes-wrap').style.display = 'none';
+  renderZipSelect();
+  renderDash();
+  showToast('Bag added to stash.');
+}
+
+function logPump(){
+  const dateRaw = document.getElementById('pump-date').value;
+  const ml = parseInt(document.getElementById('pump-ml').value);
+  if(!dateRaw || !ml){ showToast('Enter date and volume.'); return; }
+  const date = fmtDate(dateRaw);
+  const idx = data.pumpLog.findIndex(p=>p.date===date);
+  if(idx>-1){ data.pumpLog[idx].ml = ml; }
+  else{ data.pumpLog.push({date, ml, raw:dateRaw}); }
+  data.pumpLog.sort((a,b)=>(b.raw||b.date).localeCompare(a.raw||a.date));
+  save();
+  document.getElementById('pump-date').value = '';
+  document.getElementById('pump-ml').value = '';
+  showToast('Pump log saved.');
+  renderDaily();
+}
+
+function updateBag(bagId, status){
+  const b = data.bags.find(b=>b.id===bagId);
+  if(b){ b.status = status; save(); renderStash(); renderDash(); showToast('Bag marked as '+status+'.'); }
+}
+
+function donateZiplock(zipId){
+  const z = data.ziplocks.find(z=>z.id===zipId);
+  const activeBags = data.bags.filter(b=>b.zipId===zipId&&b.status==='active');
+  if(!activeBags.length){ showToast('No active bags in this ziplock.'); return; }
+  if(!confirm('Mark all '+activeBags.length+' bags in '+z.name+' as donated?')) return;
+  activeBags.forEach(b=>b.status='donated');
+  z.status = 'donated';
+  save(); renderStash(); renderDash();
+  showToast(z.name+' donated.');
+}
+
+function renderDash(){
+  const active = data.bags.filter(b=>b.status==='active');
+  const totalMl = active.reduce((s,b)=>s+b.ml,0);
+  const donated = data.bags.filter(b=>b.status==='donated').length;
+  const activeZips = new Set(active.map(b=>b.zipId)).size;
+  const pumpTotal = data.pumpLog.reduce((s,p)=>s+p.ml,0);
+
+  document.getElementById('s-ml').textContent = totalMl.toLocaleString();
+  document.getElementById('s-bags').textContent = active.length;
+  document.getElementById('s-zips').textContent = activeZips;
+  document.getElementById('s-donated').textContent = donated;
+  document.getElementById('s-pump-total').textContent = pumpTotal.toLocaleString()+' ml';
+  document.getElementById('header-sub').textContent = active.length+' bags · '+totalMl.toLocaleString()+' ml available';
+
+  const medBags = active.filter(b=>b.med);
+  const wrap = document.getElementById('med-banner-wrap');
+  if(medBags.length){
+    let medRows = medBags.map(b=>`
+      <div style="padding:7px 0;border-top:1px solid #fde68a;">
+        <div style="font-size:13px;font-weight:600;">${b.date} — ${b.ml} ml</div>
+        ${b.medNotes?`<div style="font-size:12px;color:#92400e;margin-top:2px;">${b.medNotes.substring(0,80)}</div>`:''}
+      </div>`).join('');
+    wrap.innerHTML = `<div class="med-banner">
+      <div class="med-banner-title">Medication flagged bags (${medBags.length})</div>
+      <div class="med-banner-text" style="margin-bottom:6px;">Check notes before use.</div>
+      ${medRows}
+    </div>`;
+  } else { wrap.innerHTML = ''; }
+}
+
+function renderStash(){
+  const container = document.getElementById('stash-list');
+  if(!data.ziplocks.length){ container.innerHTML='<div class="empty">No bags logged yet. Tap Log to add your first bag.</div>'; return; }
+
+  let html = '';
+
+  function renderZip(z){
+    const bags = data.bags.filter(b=>b.zipId===z.id);
+    const activeBags = bags.filter(b=>b.status==='active');
+    const totalMl = activeBags.reduce((s,b)=>s+b.ml,0);
+    html += `<div class="zip-card">
+      <div class="zip-header">
+        <div>
+          <div class="zip-name">${escHtml(z.name)}</div>
+          <div class="zip-meta">${activeBags.length} active bags · ${totalMl} ml</div>
+        </div>
+        ${z.status==='active'
+          ? `<button class="btn-sm btn-donate" onclick="donateZiplock('${z.id}')"><i class="ti ti-heart"></i> Donate all</button>`
+          : '<span class="badge badge-donated">Donated</span>'}
+      </div>`;
+    bags.forEach(b=>{
+      const statusClass = 'badge-'+b.status;
+      html += `<div class="bag-row">
+        <div class="bag-info">
+          <div class="bag-name">${b.ml} ml ${b.med?'<span class="badge badge-med">Med</span>':''}</div>
+          <div class="bag-sub">${escHtml(b.date)}${b.medNotes?' · '+escHtml(b.medNotes.substring(0,50)):''}</div>
+        </div>
+        <div class="bag-actions">
+          <span class="badge ${statusClass}">${b.status}</span>
+          ${b.status==='active'?`
+            <button class="btn-sm btn-use" onclick="updateBag('${b.id}','used')">Used</button>
+            <button class="btn-sm btn-disc" onclick="updateBag('${b.id}','discarded')">Disc.</button>
+          `:''}
+        </div>
+      </div>`;
+    });
+    html += '</div>';
+  }
+
+  const activeZips = data.ziplocks.filter(z=>z.status==='active');
+  const donatedZips = data.ziplocks.filter(z=>z.status==='donated');
+
+  if(activeZips.length){ html+='<div class="section-head">Active ziplocks</div>'; activeZips.forEach(renderZip); }
+  if(donatedZips.length){ html+='<div class="section-head">Donated</div>'; donatedZips.forEach(renderZip); }
+
+  container.innerHTML = html;
+}
+
+function renderDaily(){
+  const list = document.getElementById('daily-list');
+  if(!data.pumpLog.length){ list.innerHTML='<div class="empty">No pump logs yet.</div>'; return; }
+  let html = '';
+  data.pumpLog.slice(0,60).forEach(p=>{
+    html += `<div class="daily-row"><span class="daily-date">${p.date}</span><span class="daily-ml">${p.ml} ml</span></div>`;
+  });
+  list.innerHTML = html;
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2500);
+}
+
+function escHtml(str){
+  if(!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+if('serviceWorker' in navigator){
+  const swCode = `
+    const CACHE='stash-v1';
+    self.addEventListener('install',e=>{self.skipWaiting();});
+    self.addEventListener('fetch',e=>{
+      if(e.request.method!=='GET')return;
+      e.respondWith(caches.match(e.request).then(c=>{
+        return c||fetch(e.request).then(r=>{
+          caches.open(CACHE).then(cache=>cache.put(e.request,r.clone()));
+          return r;
+        }).catch(()=>c);
+      }));
+    });
+  `;
+  navigator.serviceWorker.register(URL.createObjectURL(new Blob([swCode],{type:'application/javascript'}))).catch(()=>{});
+}
+
+renderDash();
+renderZipSelect();
+</script>
+</body>
+</html>
