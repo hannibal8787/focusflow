@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Stash Tracker">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#5c3f6b">
+<title>Stash Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--bg:#faf8fc;--card:#fff;--text:#1a0f22;--muted:#7a6a88;--accent:#5c3f6b;--accent2:#8b5cf6;--border:#e8e0f0;--r:14px;--green:#16a34a;--red:#dc2626;--amber:#d97706;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);max-width:430px;margin:0 auto;display:flex;flex-direction:column;height:100vh;height:100dvh;}
+.app{display:flex;flex-direction:column;height:100%;}
+.hdr{background:var(--accent);color:#fff;padding:calc(env(safe-area-inset-top,0px) + 14px) 20px 14px;flex-shrink:0;}
+.hdr h1{font-size:19px;font-weight:700;}
+.hdr .sub{font-size:12px;opacity:.7;margin-top:1px;}
+.scr{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;display:none;}
+.scr.on{display:block;}
+.nav{display:flex;background:var(--card);border-top:1px solid var(--border);flex-shrink:0;padding-bottom:env(safe-area-inset-bottom,0px);}
+.nb{flex:1;padding:10px 4px 8px;border:none;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;color:var(--muted);font-family:inherit;min-height:54px;}
+.nb.on{color:var(--accent2);}
+.nb svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px;}
+.stat-n{font-size:28px;font-weight:700;color:var(--accent);}
+.stat-l{font-size:12px;color:var(--muted);margin-top:2px;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:12px;}
+.ct{font-size:11px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;}
+.fl{margin-bottom:12px;}
+.fl label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px;}
+.fl input,.fl select,.fl textarea{width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;font-family:inherit;background:var(--bg);color:var(--text);outline:none;-webkit-appearance:none;}
+.fl input:focus,.fl select:focus,.fl textarea:focus{border-color:var(--accent2);}
+.fl textarea{resize:vertical;min-height:70px;}
+.row{display:flex;gap:10px;}
+.row .fl{flex:1;}
+.bp{width:100%;padding:14px;background:var(--accent);color:#fff;border:none;border-radius:var(--r);font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;}
+.bp2{width:100%;padding:12px;background:none;border:1.5px solid var(--border);color:var(--text);border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:10px;}
+.ckr{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.ckr input{width:18px;height:18px;accent-color:var(--accent2);}
+.ckr label{font-size:14px;}
+.bsm{padding:6px 12px;font-size:12px;font-weight:600;border-radius:8px;border:1.5px solid var(--border);background:none;cursor:pointer;font-family:inherit;color:var(--text);}
+.buse{border-color:#ddd6fe;color:var(--accent2);}
+.bdisc{border-color:#fca5a5;color:var(--red);}
+.bdel{border-color:#fca5a5;color:var(--red);}
+.bdon{border-color:#bbf7d0;color:var(--green);}
+.bdg{display:inline-block;font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px;}
+.ba{background:#f3e8ff;color:#7c3aed;}
+.bd{background:#dbeafe;color:#1d4ed8;}
+.bu{background:#f0fdf4;color:var(--green);}
+.bx{background:#fef2f2;color:var(--red);}
+.bm{background:#fef9c3;color:#854d0e;}
+.zc{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:10px;}
+.zh{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px;gap:10px;}
+.zn{font-size:16px;font-weight:700;}
+.zm{font-size:12px;color:var(--muted);margin-bottom:10px;}
+.br{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-top:1px solid var(--border);}
+.bi{flex:1;min-width:0;}
+.bn{font-size:14px;font-weight:600;}
+.bs{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4;}
+.bact{display:flex;gap:5px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end;align-items:center;}
+.dr{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);}
+.dr:last-child{border-bottom:none;}
+.dd{font-size:14px;font-weight:500;}
+.dm{font-size:14px;color:var(--muted);}
+.emp{text-align:center;padding:28px;color:var(--muted);font-size:14px;}
+.sh{font-size:11px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--muted);margin:16px 0 8px;}
+.mb{background:#fef9c3;border:1px solid #fde68a;border-radius:var(--r);padding:12px 14px;margin-bottom:12px;}
+.mbt{font-size:12px;font-weight:700;color:#854d0e;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;}
+.mbb{font-size:13px;color:#713f12;}
+.toast{position:fixed;bottom:calc(64px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:#1a0f22;color:#fff;padding:10px 20px;border-radius:30px;font-size:14px;font-weight:500;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;z-index:200;}
+.toast.on{opacity:1;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="hdr">
+    <h1>Stash Tracker</h1>
+    <div class="sub" id="hsub">Loading...</div>
+  </div>
+
+  <div class="scr on" id="s-dash">
+    <div class="grid2">
+      <div class="stat"><div class="stat-n" id="d-ml">0</div><div class="stat-l">ml in stash</div></div>
+      <div class="stat"><div class="stat-n" id="d-bags">0</div><div class="stat-l">Bags available</div></div>
+      <div class="stat"><div class="stat-n" id="d-zips">0</div><div class="stat-l">Active ziplocks</div></div>
+      <div class="stat"><div class="stat-n" id="d-don">0</div><div class="stat-l">Bags donated</div></div>
+    </div>
+    <div class="card">
+      <div class="ct">Total pumped (all time)</div>
+      <div style="font-size:26px;font-weight:700;color:var(--accent);" id="d-pump">0 ml</div>
+    </div>
+    <div id="d-medbanner"></div>
+  </div>
+
+  <div class="scr" id="s-log">
+    <div class="card">
+      <div class="ct">Add bag to stash</div>
+      <div class="row">
+        <div class="fl"><label>Date pumped</label><input type="date" id="bag-date"></div>
+        <div class="fl"><label>Volume (ml)</label><input type="number" id="bag-ml" placeholder="120" min="1"></div>
+      </div>
+      <div class="fl">
+        <label>Ziplock group</label>
+        <select id="bag-zip" onchange="toggleNewZip()"><option value="">+ New ziplock</option></select>
+      </div>
+      <div class="fl" id="newzip-wrap">
+        <label>New ziplock name</label>
+        <input type="text" id="bag-zipname" placeholder="e.g. Ziplock A, Week 1...">
+      </div>
+      <div class="ckr">
+        <input type="checkbox" id="bag-med" onchange="document.getElementById('bag-mednotes-wrap').style.display=this.checked?'block':'none'">
+        <label for="bag-med">Medication taken this day</label>
+      </div>
+      <div class="fl" id="bag-mednotes-wrap" style="display:none;">
+        <label>Medication notes</label>
+        <textarea id="bag-mednotes" placeholder="Which medication, dose, timing..."></textarea>
+      </div>
+      <button class="bp" onclick="addBag()">+ Add bag</button>
+    </div>
+    <div class="card">
+      <div class="ct">Log daily pump output</div>
+      <div class="row">
+        <div class="fl"><label>Date</label><input type="date" id="pump-date"></div>
+        <div class="fl"><label>Total (ml)</label><input type="number" id="pump-ml" placeholder="340" min="1"></div>
+      </div>
+      <div class="ckr">
+        <input type="checkbox" id="pump-med" onchange="document.getElementById('pump-mednotes-wrap').style.display=this.checked?'block':'none'">
+        <label for="pump-med">Medication taken this day</label>
+      </div>
+      <div class="fl" id="pump-mednotes-wrap" style="display:none;">
+        <label>Medication notes</label>
+        <textarea id="pump-mednotes" placeholder="Which medication, dose, timing..."></textarea>
+      </div>
+      <button class="bp" style="background:var(--accent2);" onclick="logPump()">Log output</button>
+    </div>
+  </div>
+
+  <div class="scr" id="s-stash">
+    <div id="stash-list"></div>
+  </div>
+
+  <div class="scr" id="s-daily">
+    <div class="card">
+      <div class="ct">Pump log</div>
+      <div id="daily-list"></div>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <button class="nb on" onclick="go('dash',this)">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Summary
+    </button>
+    <button class="nb" onclick="go('log',this)">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      Log
+    </button>
+    <button class="nb" onclick="go('stash',this)">
+      <svg viewBox="0 0 24 24"><path d="M3 9l1-5h16l1 5"/><rect x="2" y="9" width="20" height="12" rx="2"/><line x1="12" y1="9" x2="12" y2="21"/></svg>
+      Stash
+    </button>
+    <button class="nb" onclick="go('daily',this)">
+      <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Daily
+    </button>
+  </nav>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+var D = JSON.parse(localStorage.getItem('bm2') || '{"bags":[],"zips":[],"pump":[]}');
+
+function save(){ localStorage.setItem('bm2', JSON.stringify(D)); }
+
+function esc(s){ return s ? s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : ''; }
+
+function fmt(iso){ if(!iso) return ''; var p=iso.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
+
+function toast(m){ var t=document.getElementById('toast'); t.textContent=m; t.classList.add('on'); setTimeout(function(){t.classList.remove('on');},2500); }
+
+function go(name, btn){
+  document.querySelectorAll('.scr').forEach(function(s){s.classList.remove('on');});
+  document.querySelectorAll('.nb').forEach(function(b){b.classList.remove('on');});
+  document.getElementById('s-'+name).classList.add('on');
+  btn.classList.add('on');
+  if(name==='dash') rdash();
+  if(name==='stash') rstash();
+  if(name==='daily') rdaily();
+  if(name==='log') rzips();
+}
+
+function toggleNewZip(){
+  document.getElementById('newzip-wrap').style.display = document.getElementById('bag-zip').value ? 'none' : 'block';
+}
+
+function rzips(){
+  var sel = document.getElementById('bag-zip');
+  var active = D.zips.filter(function(z){return z.status==='active';});
+  sel.innerHTML = '<option value="">+ New ziplock</option>';
+  active.forEach(function(z){
+    var cnt = D.bags.filter(function(b){return b.zid===z.id && b.status==='active';}).length;
+    sel.innerHTML += '<option value="'+z.id+'">'+esc(z.name)+' ('+cnt+' bags)</option>';
+  });
+  toggleNewZip();
+}
+
+function addBag(){
+  var dr = document.getElementById('bag-date').value;
+  var ml = parseInt(document.getElementById('bag-ml').value);
+  var zsel = document.getElementById('bag-zip').value;
+  var znew = document.getElementById('bag-zipname').value.trim();
+  var med = document.getElementById('bag-med').checked;
+  var mednotes = document.getElementById('bag-mednotes').value.trim();
+  if(!dr || !ml){ toast('Enter date and volume.'); return; }
+  var date = fmt(dr);
+  var zid = zsel;
+  if(!zsel){
+    if(!znew){ toast('Enter a ziplock name.'); return; }
+    zid = 'z'+Date.now();
+    D.zips.push({id:zid, name:znew, status:'active'});
+  }
+  D.bags.push({id:'b'+Date.now(), date:date, ml:ml, zid:zid, status:'active', med:med, mednotes:med?mednotes:''});
+  save();
+  document.getElementById('bag-date').value='';
+  document.getElementById('bag-ml').value='';
+  document.getElementById('bag-med').checked=false;
+  document.getElementById('bag-mednotes').value='';
+  document.getElementById('bag-mednotes-wrap').style.display='none';
+  rzips(); rdash();
+  toast('Bag added.');
+}
+
+function logPump(){
+  var dr = document.getElementById('pump-date').value;
+  var ml = parseInt(document.getElementById('pump-ml').value);
+  var med = document.getElementById('pump-med').checked;
+  var mednotes = document.getElementById('pump-mednotes').value.trim();
+  if(!dr || !ml){ toast('Enter date and volume.'); return; }
+  var date = fmt(dr);
+  var idx = D.pump.findIndex(function(p){return p.date===date;});
+  if(idx>-1){ D.pump[idx].ml=ml; D.pump[idx].med=med; D.pump[idx].mednotes=med?mednotes:''; }
+  else { D.pump.push({date:date, raw:dr, ml:ml, med:med, mednotes:med?mednotes:''}); }
+  D.pump.sort(function(a,b){return (b.raw||b.date).localeCompare(a.raw||a.date);});
+  save();
+  document.getElementById('pump-date').value='';
+  document.getElementById('pump-ml').value='';
+  document.getElementById('pump-med').checked=false;
+  document.getElementById('pump-mednotes').value='';
+  document.getElementById('pump-mednotes-wrap').style.display='none';
+  toast('Pump log saved.');
+}
+
+function bagAction(bagId, action){
+  if(action==='delete'){
+    D.bags = D.bags.filter(function(b){return b.id!==bagId;});
+    save(); rstash(); rdash();
+    toast('Bag deleted.');
+  } else {
+    var b = D.bags.find(function(x){return x.id===bagId;});
+    if(b){ b.status=action; save(); rstash(); rdash(); toast('Bag marked '+action+'.'); }
+  }
+}
+
+function donateZip(zipId){
+  var z = D.zips.find(function(x){return x.id===zipId;});
+  var ab = D.bags.filter(function(b){return b.zid===zipId && b.status==='active';});
+  if(!ab.length){ toast('No active bags.'); return; }
+  ab.forEach(function(b){b.status='donated';});
+  z.status='donated';
+  save(); rstash(); rdash();
+  toast(z.name+' donated.');
+}
+
+function deletePump(date){
+  D.pump = D.pump.filter(function(p){return p.date!==date;});
+  save(); rdaily(); rdash();
+  toast('Deleted.');
+}
+
+function rdash(){
+  var active = D.bags.filter(function(b){return b.status==='active';});
+  var totalml = active.reduce(function(s,b){return s+b.ml;},0);
+  var donated = D.bags.filter(function(b){return b.status==='donated';}).length;
+  var azips = new Set(active.map(function(b){return b.zid;})).size;
+  var ptotal = D.pump.reduce(function(s,p){return s+p.ml;},0);
+  document.getElementById('d-ml').textContent = totalml.toLocaleString();
+  document.getElementById('d-bags').textContent = active.length;
+  document.getElementById('d-zips').textContent = azips;
+  document.getElementById('d-don').textContent = donated;
+  document.getElementById('d-pump').textContent = ptotal.toLocaleString()+' ml';
+  document.getElementById('hsub').textContent = active.length+' bags · '+totalml.toLocaleString()+' ml available';
+  var medbags = active.filter(function(b){return b.med;});
+  var wrap = document.getElementById('d-medbanner');
+  if(medbags.length){
+    var rows = medbags.map(function(b){
+      return '<div style="padding:7px 0;border-top:1px solid #fde68a;"><div style="font-size:13px;font-weight:600;">'+esc(b.date)+' — '+b.ml+' ml</div>'+(b.mednotes?'<div style="font-size:12px;color:#92400e;margin-top:2px;">'+esc(b.mednotes.substring(0,80))+'</div>':'')+'</div>';
+    }).join('');
+    wrap.innerHTML = '<div class="mb"><div class="mbt">Medication flagged ('+medbags.length+')</div><div class="mbb">Check notes before use.</div>'+rows+'</div>';
+  } else { wrap.innerHTML=''; }
+}
+
+function rstash(){
+  var el = document.getElementById('stash-list');
+  if(!D.zips.length){ el.innerHTML='<div class="emp">No bags logged yet.</div>'; return; }
+  var html='';
+  var azips = D.zips.filter(function(z){return z.status==='active';});
+  var dzips = D.zips.filter(function(z){return z.status==='donated';});
+  function rzip(z){
+    var bags = D.bags.filter(function(b){return b.zid===z.id;});
+    var ab = bags.filter(function(b){return b.status==='active';});
+    var tml = ab.reduce(function(s,b){return s+b.ml;},0);
+    html+='<div class="zc">';
+    html+='<div class="zh"><div><div class="zn">'+esc(z.name)+'</div><div class="zm">'+ab.length+' active · '+tml+' ml</div></div>';
+    if(z.status==='active'){
+      html+='<button class="bsm bdon" onclick="donateZip(\''+z.id+'\')">Donate all</button>';
+    } else {
+      html+='<span class="bdg bd">Donated</span>';
+    }
+    html+='</div>';
+    bags.forEach(function(b){
+      var sc = b.status==='active'?'ba':b.status==='donated'?'bd':b.status==='used'?'bu':'bx';
+      html+='<div class="br">';
+      html+='<div class="bi"><div class="bn">'+b.ml+' ml '+(b.med?'<span class="bdg bm">Med</span>':'')+'</div>';
+      html+='<div class="bs">'+esc(b.date)+(b.mednotes?' · '+esc(b.mednotes.substring(0,50)):'')+'</div></div>';
+      html+='<div class="bact"><span class="bdg '+sc+'">'+b.status+'</span>';
+      if(b.status==='active'){
+        html+='<button class="bsm buse" data-bid="'+b.id+'" data-act="used">Used</button>';
+        html+='<button class="bsm bdisc" data-bid="'+b.id+'" data-act="discarded">Disc.</button>';
+      }
+      html+='<button class="bsm bdel" data-bid="'+b.id+'" data-act="delete">Delete</button>';
+      html+='</div></div>';
+    });
+    html+='</div>';
+  }
+  if(azips.length){html+='<div class="sh">Active</div>';azips.forEach(rzip);}
+  if(dzips.length){html+='<div class="sh">Donated</div>';dzips.forEach(rzip);}
+  el.innerHTML=html;
+  // Event delegation for stash buttons
+  el.addEventListener('click', function(e){
+    var btn = e.target.closest('[data-act]');
+    if(!btn) return;
+    var act = btn.getAttribute('data-act');
+    var bid = btn.getAttribute('data-bid');
+    bagAction(bid, act);
+  });
+}
+
+function rdaily(){
+  var el = document.getElementById('daily-list');
+  if(!D.pump.length){ el.innerHTML='<div class="emp">No pump logs yet.</div>'; return; }
+  var html='';
+  D.pump.slice(0,60).forEach(function(p){
+    html+='<div class="dr">';
+    html+='<div><span class="dd">'+esc(p.date)+'</span>';
+    if(p.med) html+='<span class="bdg bm" style="margin-left:6px;">Med</span>';
+    if(p.mednotes) html+='<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+esc(p.mednotes.substring(0,50))+'</div>';
+    html+='</div>';
+    html+='<div style="display:flex;align-items:center;gap:8px;"><span class="dm">'+p.ml+' ml</span>';
+    html+='<button class="bsm bdel" data-pdate="'+p.date+'">Delete</button>';
+    html+='</div></div>';
+  });
+  el.innerHTML=html;
+  // Event delegation for daily delete buttons
+  el.addEventListener('click', function(e){
+    var btn = e.target.closest('[data-pdate]');
+    if(!btn) return;
+    deletePump(btn.getAttribute('data-pdate'));
+  });
+}
+
+if('serviceWorker' in navigator){
+  var sw='const C="stash-v2";self.addEventListener("install",e=>{self.skipWaiting();});self.addEventListener("fetch",e=>{if(e.request.method!=="GET")return;e.respondWith(caches.match(e.request).then(c=>{return c||fetch(e.request).then(r=>{caches.open(C).then(ca=>ca.put(e.request,r.clone()));return r;}).catch(()=>c);}));});';
+  navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'application/javascript'}))).catch(function(){});
+}
+
+rdash(); rzips();
+</script>
+</body>
+</html>
